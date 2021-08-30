@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
     A ROS Node for the Arduino microcontroller
@@ -26,7 +26,7 @@ from ros_arduino_msgs.srv import *
 from ros_arduino_python.base_controller import BaseController
 from geometry_msgs.msg import Twist
 import os, time
-import thread
+import _thread as thread
 from serial.serialutil import SerialException
 
 class ArduinoROS():
@@ -106,7 +106,7 @@ class ArduinoROS():
 
         sensor_params = rospy.get_param("~sensors", dict({}))
 
-        for name, params in sensor_params.iteritems():
+        for name, params in sensor_params.items():
             # Set the direction to input if not specified
             try:
                 params['direction']
