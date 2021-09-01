@@ -1,0 +1,5 @@
+<launch>
+   <node name="zumobot" pkg="ros_arduino_python" type="arduino_node.py" output="screen">
+      <rosparam file="$(find ros_arduino_python)/config/zumo_arduino_params.yaml" command="load" />
+   </node>
+</launch>
