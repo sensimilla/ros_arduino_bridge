@@ -37,6 +37,7 @@ class Arduino:
     '''
     N_ANALOG_PORTS = 6
     N_DIGITAL_PORTS = 12
+    IMU_FIELDS = 9
 
     def __init__(self, port="/dev/ttyACM0", baudrate=57600, timeout=0.5, motors_reversed=False):
 
@@ -99,7 +100,7 @@ class Arduino:
         self.port.write(cmd + '\r')
 
     def recv(self, timeout=0.5):
-        timeout = min(timeout, self.timeout)
+        #timeout = min(timeout, self.timeout)
         ''' This command should not be used on its own: it is called by the execute commands
             below in a thread safe manner.  Note: we use read() instead of readline() since
             readline() tends to return garbage characters from the Arduino
@@ -112,10 +113,10 @@ class Arduino:
             value += c
             attempts += 1
             if attempts * self.interCharTimeout > timeout:
+                print("recv timed out waiting for line end")
                 return None
 
         value = value.strip('\r')
-
         return value
 
     def recv_ack(self):
@@ -135,14 +136,16 @@ class Arduino:
         except:
             return None
 
-    def recv_array(self):
+    def recv_array(self, chunks=1):
         ''' This command should not be used on its own: it is called by the execute commands
             below in a thread safe manner.
         '''
         try:
-            values = self.recv(self.timeout * self.N_ANALOG_PORTS).split()
-            return map(int, values)
+            # added chunks as recv times out at around 30 characters
+            values = self.recv(self.timeout * self.N_ANALOG_PORTS * chunks)
+            return values.split()
         except:
+            print("recv_array failed")
             return []
 
     def execute(self, cmd):
@@ -177,7 +180,7 @@ class Arduino:
         self.mutex.release()
         return int(value)
 
-    def execute_array(self, cmd):
+    def execute_array(self, cmd, chunks=1):
         ''' Thread safe execution of "cmd" on the Arduino returning an array.
         '''
         self.mutex.acquire()
@@ -192,12 +195,12 @@ class Arduino:
 
         try:
             self.port.write((cmd + '\r').encode())
-            values = self.recv_array()
+            values = self.recv_array(chunks)
             while attempts < ntries and (values == '' or values == 'Invalid Command' or values == [] or values == None):
                 try:
                     self.port.flushInput()
                     self.port.write((cmd + '\r').encode())
-                    values = self.recv_array()
+                    values = self.recv_array(chunks)
                 except:
                     print("Exception executing command: " + cmd)
                 attempts += 1
@@ -206,9 +209,8 @@ class Arduino:
             print("Exception executing command: " + cmd)
             raise SerialException
             return []
-
         try:
-            values = map(int, values)
+            values = list(map(int, values))
         except:
             values = []
 
@@ -259,7 +261,7 @@ class Arduino:
         ''' Get the current baud rate on the serial port.
         '''
         try:
-            return int(self.execute('b'));
+            return int(self.execute('b'))
         except:
             return None
 
@@ -348,6 +350,23 @@ class Arduino:
 #        '''
 #        return self.execute('z %d %d' %(triggerPin, outputPin))
 
+    def imu_read(self):
+        ''' reads 9 values from IMU: gyro(xyz) acceleration(xyz) and
+            magnetic field(xyz)
+        '''
+        values = self.execute_array('i', 2)
+        if len(values) != self.IMU_FIELDS:
+            raise SerialException
+            return None
+        else:
+            return values
+    
+    def button_read(self):
+        return self.execute('o')
+    
+    def buzzer_write(self, tune=1):
+        return self.execute_ack('z %d' %tune)
+        
 
 """ Basic test for connectivity """
 if __name__ == "__main__":
