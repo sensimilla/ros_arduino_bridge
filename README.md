@@ -1,6 +1,31 @@
 Overview
 --------
-This branch (indigo-devel) is intended for ROS Indigo and above, and uses the Catkin buildsystem. It may also be compatible with ROS Hydro.
+This fork of the hbrobotics ROS Arduino Bridge has been updated to work with ROS Noetic, and uses the Catkin buildsystem. The stack has been updated to use python3.
+
+Support has been added for robots based on the Pololu Zumo Shield (https://www.pololu.com/category/169/zumo-robot-for-arduino)
+
+Unfortunately this platform does not have wheel encoders so the ROS base controller won't work and integration into wider ROS is likely to be a bit limited.
+
+I am using a Raspberry pi zero connected by USB to the zumobot to run the ROS node
+
+TODO 
+update ROS python node to work with zumo
+integrate with existing and create new ROS Messages
+IMU Value Conversion (on Arduino ?)
+Pitch, roll Yaw calculations (on Arduino ?)
+
+IN PROGRESS
+
+DONE
+update to run under python3
+update python driver to work with zumo
+create Zumo firmware - copied base firmware and added support for zumo specific hardware
+basic IMU support in firmware and driver, currently providing raw int values
+Motor support in firmware and driver (not tested)
+buzzer support in firmware and driver
+button support in firmware and driver
+
+======================================================================================
 
 This ROS stack includes an Arduino library (called ROSArduinoBridge) and a collection of ROS packages for controlling an Arduino-based robot using standard ROS messages and services.  The stack does **not** depend on ROS Serial.
 
