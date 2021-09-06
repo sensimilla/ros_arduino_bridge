@@ -19,6 +19,7 @@ add_service_files(FILES
                   ServoWrite.srv
                   AnalogWrite.srv
                   AnalogRead.srv
+                  BuzzerWrite.srv
                  )
 
 generate_messages(   
