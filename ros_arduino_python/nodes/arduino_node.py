@@ -91,7 +91,10 @@ class ArduinoROS():
         rospy.Service('~analog_read', AnalogRead, self.AnalogReadHandler)
 
          # A service to play a preset 'tune' on the zumo buzzer
-        rospy.Service('~buzzer_write', BuzzerWrite, self.BuzzerWriteHandler)       
+        rospy.Service('~buzzer_write', BuzzerWrite, self.BuzzerWriteHandler)
+
+         # A service to control zumo motors
+        rospy.Service('~motors_write', MotorsWrite, self.MotorsWriteHandler)         
 
         # Initialize the controlller
         self.controller = Arduino(self.port, self.baud, self.timeout, self.motors_reversed)
@@ -206,7 +209,11 @@ class ArduinoROS():
 
     def BuzzerWriteHandler(self, req):
         self.controller.buzzer_write(req.tune)
-        return BuzzerWriteResponse()    
+        return BuzzerWriteResponse()
+
+    def MotorsWriteHandler(self, req):
+        self.controller.drive(req.right, req.left)
+        return MotorsWriteResponse()
 
     def shutdown(self):
         rospy.loginfo("Shutting down Arduino Node...")
