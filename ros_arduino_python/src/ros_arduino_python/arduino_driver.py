@@ -364,7 +364,7 @@ class Arduino:
     def button_read(self):
         return self.execute('o')
     
-    def buzzer_write(self, tune=1):
+    def buzzer_write(self, tune=0):
         return self.execute_ack('z %d' %tune)
         
 
