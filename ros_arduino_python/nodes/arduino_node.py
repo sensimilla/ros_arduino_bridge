@@ -23,11 +23,13 @@ import rospy
 from ros_arduino_python.arduino_driver import Arduino
 from ros_arduino_python.arduino_sensors import *
 from ros_arduino_msgs.srv import *
+from std_srvs.srv import Trigger
 from ros_arduino_python.base_controller import BaseController
 from geometry_msgs.msg import Twist
 import os, time
 import _thread as thread
 from serial.serialutil import SerialException
+
 
 class ArduinoROS():
     def __init__(self):
@@ -68,7 +70,7 @@ class ArduinoROS():
         # The SensorState publisher periodically publishes the values of all sensors on
         # a single topic.
         self.sensorStatePub = rospy.Publisher('~sensor_state', SensorState, queue_size=5)
-
+        
         # A service to position a PWM servo
         rospy.Service('~servo_write', ServoWrite, self.ServoWriteHandler)
 
@@ -94,7 +96,10 @@ class ArduinoROS():
         rospy.Service('~buzzer_write', BuzzerWrite, self.BuzzerWriteHandler)
 
          # A service to control zumo motors
-        rospy.Service('~motors_write', MotorsWrite, self.MotorsWriteHandler)         
+        rospy.Service('~motors_write', MotorsWrite, self.MotorsWriteHandler)
+
+         # A service to read and publish zumo imu
+        rospy.Service('~imu_read', Trigger, self.IMUReadHandler)
 
         # Initialize the controlller
         self.controller = Arduino(self.port, self.baud, self.timeout, self.motors_reversed)
@@ -133,6 +138,10 @@ class ArduinoROS():
                 sensor = PhidgetsVoltage(self.controller, name, params['pin'], params['rate'], self.base_frame)
             elif params['type'] == 'PhidgetsCurrent':
                 sensor = PhidgetsCurrent(self.controller, name, params['pin'], params['rate'], self.base_frame)
+            elif params['type'] == 'ZumoImu':
+                sensor = ZumoImu(self.controller, name, params['pin'], params['rate'], self.base_frame)
+            elif params['type'] == 'ZumoMag':
+                sensor = ZumoMag(self.controller, name, params['pin'], params['rate'], self.base_frame)
 
 #                if params['type'] == "MaxEZ1":
 #                    self.sensors[len(self.sensors)]['trigger_pin'] = params['trigger_pin']
@@ -173,7 +182,6 @@ class ArduinoROS():
                     self.sensorStatePub.publish(msg)
                 except:
                     pass
-
                 self.t_next_sensors = now + self.t_delta_sensors
 
             r.sleep()
@@ -214,6 +222,10 @@ class ArduinoROS():
     def MotorsWriteHandler(self, req):
         self.controller.drive(req.right, req.left)
         return MotorsWriteResponse()
+    
+    def IMUReadHandler(self, req):
+        self.controller.imu_read()
+        return {"success": True, "message": "Succesfully read zumo IMU"}
 
     def shutdown(self):
         rospy.loginfo("Shutting down Arduino Node...")

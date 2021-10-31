@@ -49,7 +49,7 @@ class Arduino:
         self.timeout = timeout
         self.encoder_count = 0
         self.writeTimeout = timeout
-        self.interCharTimeout = timeout / 30.
+        self.interCharTimeout = timeout / 30
         self.motors_reversed = motors_reversed
         # Keep things thread safe
         self.mutex = thread.allocate_lock()
@@ -217,6 +217,43 @@ class Arduino:
         self.mutex.release()
         return values
 
+    def execute_float_array(self, cmd, chunks=1):
+        ''' Thread safe execution of "cmd" on the Arduino returning an array.
+        '''
+        self.mutex.acquire()
+
+        try:
+            self.port.flushInput()
+        except:
+            pass
+
+        ntries = 1
+        attempts = 0
+
+        try:
+            self.port.write((cmd + '\r').encode())
+            values = self.recv_array(chunks)
+            while attempts < ntries and (values == '' or values == 'Invalid Command' or values == [] or values == None):
+                try:
+                    self.port.flushInput()
+                    self.port.write((cmd + '\r').encode())
+                    values = self.recv_array(chunks)
+                except:
+                    print("Exception executing command: " + cmd)
+                attempts += 1
+        except:
+            self.mutex.release()
+            print("Exception executing command: " + cmd)
+            raise SerialException
+            return []
+        try:
+            values = list(map(float, values))
+        except:
+            values = []
+
+        self.mutex.release()
+        return values
+
     def execute_ack(self, cmd):
         ''' Thread safe execution of "cmd" on the Arduino returning True if response is ACK.
         '''
@@ -353,8 +390,9 @@ class Arduino:
     def imu_read(self):
         ''' reads 9 values from IMU: gyro(xyz) acceleration(xyz) and
             magnetic field(xyz)
+            Currently floats in ROS standard units
         '''
-        values = self.execute_array('i', 2)
+        values = self.execute_float_array('i', 2)
         if len(values) != self.IMU_FIELDS:
             raise SerialException
             return None

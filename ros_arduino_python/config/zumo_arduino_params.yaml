@@ -39,13 +39,15 @@ base_frame: base_link
 #	  * PololuMotorCurrent
 #	  * PhidgetsVoltage
 #	  * PhidgetsCurrent (20 Amp, DC)
-
-
+#	  * ZumoImu (linear and rotation only)
 
 sensors: {
   #motor_current_left:   {pin: 0, type: PololuMotorCurrent, rate: 5},
   #motor_current_right:  {pin: 1, type: PololuMotorCurrent, rate: 5},
   #ir_front_center:      {pin: 2, type: GP2D12, rate: 10},
   #sonar_front_center:   {pin: 5, type: Ping, rate: 10},
-  arduino_led:          {pin: 13, type: Digital, rate: 5, direction: output}
+  #zumo_button_raw:      {pin: 12, type: Digital, rate: 50}, # raw button state
+  arduino_led:           {pin: 13, type: Digital, rate: 1, direction: output},
+  zumo_imu:              {pin: 0, type: ZumoImu, rate: 20},
+  zumo_mag:              {pin: 0, type: ZumoMag, rate: 20}
 }

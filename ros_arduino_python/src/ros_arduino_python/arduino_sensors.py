@@ -23,6 +23,8 @@ import roslib; roslib.load_manifest('ros_arduino_python')
 import rospy
 from sensor_msgs.msg import Range
 from ros_arduino_msgs.msg import *
+from sensor_msgs.msg import Imu
+from sensor_msgs.msg import MagneticField
 
 LOW = 0
 HIGH = 1
@@ -37,6 +39,8 @@ class MessageType:
     FLOAT = 3
     INT = 4
     BOOL = 5
+    IMU = 6
+    MAG = 7
     
 class Sensor(object):
     def __init__(self, controller, name, pin, rate, frame_id, direction="input", **kwargs):
@@ -69,6 +73,18 @@ class Sensor(object):
             # For range sensors, assign the value to the range message field
             if self.message_type == MessageType.RANGE:
                 self.msg.range = self.value
+            elif self.message_type == MessageType.IMU:
+                self.msg.linear_acceleration.x = self.value[3]
+                self.msg.linear_acceleration.y = self.value[4]
+                self.msg.linear_acceleration.z = self.value[5]
+
+                self.msg.angular_velocity.x = self.value[0]
+                self.msg.angular_velocity.y = self.value[1]
+                self.msg.angular_velocity.z = self.value[2]
+            elif self.message_type == MessageType.MAG:
+                self.msg.magnetic_field.x = self.value[6]
+                self.msg.magnetic_field.x = self.value[7]
+                self.msg.magnetic_field.x = self.value[8]
             else:
                 self.msg.value = self.value
 
@@ -268,6 +284,39 @@ class MaxEZ1Sensor(SonarSensor):
         
     def read_value(self):
         return self.controller.get_MaxEZ1(self.trigger_pin, self.output_pin)
+
+
+class ZumoImu(Sensor):
+    def __init__(self, *args, **kwargs):
+        super(ZumoImu, self).__init__(*args, **kwargs)
+        
+        self.message_type = MessageType.IMU
+        self.name = "imu/data_raw"
+        
+        self.msg = Imu()
+        self.msg.header.frame_id = self.frame_id
+
+        #self.pub = rospy.Publisher("~sensor/" + self.name, Imu, queue_size=5)
+        self.pub = rospy.Publisher("/imu/data_raw", Imu, queue_size=5)
+        
+    def read_value(self):
+        return self.controller.imu_read()
+
+class ZumoMag(Sensor):
+    def __init__(self, *args, **kwargs):
+        super(ZumoMag, self).__init__(*args, **kwargs)
+        
+        self.message_type = MessageType.MAG
+        self.name = "imu/mag"
+        
+        self.msg = MagneticField()
+        self.msg.header.frame_id = self.frame_id
+
+        #self.pub = rospy.Publisher("~sensor/" + self.name, Imu, queue_size=5)
+        self.pub = rospy.Publisher("/imu/mag", MagneticField, queue_size=5)
+        
+    def read_value(self):
+        return self.controller.imu_read()
 
             
 if __name__ == '__main__':
