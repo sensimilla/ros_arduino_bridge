@@ -16,6 +16,16 @@ Pitch, roll Yaw calculations (on Arduino ?)
 
 IN PROGRESS
 
+1/11/21 
+- Fully integrated Zumo IMU and magentic field sensors into sensors framework
+- applying currently hard coded calibration values and perfoming unit conversions to ROS standard units on the arduino.
+- python node publishes IMU data out as a sensor_msg/IMU message on imu/data_raw to be used by madgwick/complentary filters.  
+- magnetic field data is published as a sensor_msgs/MagneticField message on imu/mag.
+
+performance with target of 20 hz for IMU and mag dat
+zero w    ~15.5-hz     85% CPU
+zero w 2   16.67hz      7% CPU 
+
 DONE
 update to run under python3
 update python driver to work with zumo
